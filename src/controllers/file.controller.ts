@@ -22,14 +22,15 @@ export default async function (fastify: FastifyInstance) {
   fastify.get('/:uuid', async function (request: FastifyRequest<{
     Params: {
       uuid: string
+    }, Querystring: {
+      show: any
     }
   }>, reply: FastifyReply) {
     let contentMode = 'attachment'
     // fix CSP
     reply.header('Content-Security-Policy', `default-src 'self' 'unsafe-inline' pcm.groupclaes.be`)
-    if ('show' in (request.query as any)) {
+    if ('show' in request.query)
       contentMode = 'inline'
-    }
 
     try {
       const repository = new Document(request.log)
@@ -128,7 +129,7 @@ export default async function (fastify: FastifyInstance) {
                 .send(Buffer.from(pdfBytes))
             }
           } catch (err) {
-            console.log(err)
+            request.log.error(err)
           } finally {
             if (!success) {
               const stream = fs.createReadStream(_fn)
