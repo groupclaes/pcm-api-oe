@@ -202,6 +202,7 @@ export default async function (fastify: FastifyInstance) {
 
       let document
       if (!Tools.shouldFindCommon(company, objectType, documentType)) {
+        request.log.debug('default search logic')
         document = await repository.findOne({
           companyOe: company,
           objectType,
@@ -210,6 +211,7 @@ export default async function (fastify: FastifyInstance) {
           culture
         })
       } else {
+        request.log.debug('search in common first logic')
         document = await repository.findOne({
           company: 'alg',
           companyOe: company,
@@ -229,6 +231,7 @@ export default async function (fastify: FastifyInstance) {
         }
       }
       if (company === 'bra' && documentType === 'foto' && !document) {
+        request.log.debug('bra picture fallback logic')
         document = await repository.findOne({
           companyOe: 'gro',
           objectType,
@@ -244,7 +247,7 @@ export default async function (fastify: FastifyInstance) {
 
         if (fs.existsSync(_fn)) {
           if (thumbnail && documentType === 'foto') {
-            return reply.redirect(307, `https://pcm.groupclaes.be/v3/product-images/${_guid}?s=thumb`)
+            return reply.redirect(307, `https://pcm.groupclaes.be/v4/product-images/${_guid}?s=thumb`)
           }
           const lastMod = fs.statSync(_fn).mtime
 
@@ -270,6 +273,7 @@ export default async function (fastify: FastifyInstance) {
             let should_modify_pdf = Tools.shouldModifyPDF(document)
             reply.header('should_modify_pdf', `${should_modify_pdf}`)
             if (should_modify_pdf) {
+              request.log.debug('should_modify_pdf, using PDFDocument to add text to pdf')
               const pdfDoc = await PDFDocument.load(fs.readFileSync(_fn), { ignoreEncryption: true })
 
               const pages = pdfDoc.getPages()
@@ -329,7 +333,7 @@ export default async function (fastify: FastifyInstance) {
                 .send(Buffer.from(pdfBytes))
             }
           } catch (err) {
-            console.log(err)
+            request.log.error(err, 'error while modifying PDF')
           } finally {
             if (!success) {
               const stream = fs.createReadStream(_fn)
