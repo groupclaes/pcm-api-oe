@@ -327,8 +327,8 @@ export default async function (fastify: FastifyInstance) {
                 rotate: firstPage.getRotation()
               })
 
-              success = true
               const pdfBytes = await pdfDoc.save()
+              success = true
               return reply
                 .send(Buffer.from(pdfBytes))
             }
