@@ -70,7 +70,8 @@ export default async function (fastify: FastifyInstance) {
             let should_modify_pdf = Tools.shouldModifyPDF(document)
             reply.header('should_modify_pdf', `${should_modify_pdf}`)
             if (should_modify_pdf) {
-              const pdfDoc = await PDFDocument.load(fs.readFileSync(_fn), { ignoreEncryption: true })
+              request.log.debug('should_modify_pdf, using PDFDocument to add text to pdf')
+              const pdfDoc = await PDFDocument.load(fs.readFileSync(_fn), { ignoreEncryption: true, updateMetadata: true })
 
               const pages = pdfDoc.getPages()
               const firstPage = pages[0]
@@ -123,13 +124,13 @@ export default async function (fastify: FastifyInstance) {
                 rotate: firstPage.getRotation()
               })
 
-              success = true
               const pdfBytes = await pdfDoc.save()
+              success = true
               return reply
                 .send(Buffer.from(pdfBytes))
             }
           } catch (err) {
-            request.log.error(err)
+            request.log.error(err, 'error while modifying PDF')
           } finally {
             if (!success) {
               const stream = fs.createReadStream(_fn)
@@ -274,7 +275,7 @@ export default async function (fastify: FastifyInstance) {
             reply.header('should_modify_pdf', `${should_modify_pdf}`)
             if (should_modify_pdf) {
               request.log.debug('should_modify_pdf, using PDFDocument to add text to pdf')
-              const pdfDoc = await PDFDocument.load(fs.readFileSync(_fn), { ignoreEncryption: true })
+              const pdfDoc = await PDFDocument.load(fs.readFileSync(_fn), { ignoreEncryption: true, updateMetadata: true })
 
               const pages = pdfDoc.getPages()
               const firstPage = pages[0]
