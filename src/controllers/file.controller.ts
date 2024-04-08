@@ -124,7 +124,8 @@ export default async function (fastify: FastifyInstance) {
                 rotate: firstPage.getRotation()
               })
 
-              const pdfBytes = await pdfDoc.save()
+              pdfDoc.setProducer('PCM oe API v4')
+              const pdfBytes = await pdfDoc.save({ addDefaultPage: true })
               success = true
               return reply
                 .send(Buffer.from(pdfBytes))

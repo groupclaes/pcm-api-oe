@@ -19,4 +19,5 @@ export default async function (config: any): Promise<FastifyInstance | undefined
   await fastify.register(objectlistController, { prefix: `${version_prefix}/${config.wrapper.serviceName}/objectlist`, logLevel: LOGLEVEL })
   await fastify.listen({ port: +(env['PORT'] ?? 80), host: '::' })
   return fastify
+  // https://pcm.groupclaes.be/v4/oe/file/759aba77-bffa-4b6f-bd09-deeb5ba5b28a?show
 }
