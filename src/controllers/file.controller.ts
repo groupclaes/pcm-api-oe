@@ -78,6 +78,7 @@ export default async function (fastify: FastifyInstance) {
               const { height, width } = firstPage.getSize()
 
               const pageRotation = firstPage.getRotation().angle
+              request.log.debug({ pageRotation, height, width, pageCount: pages.length }, 'page info')
               const rotationRads = pageRotation * Math.PI / 180
 
               const x = 10
@@ -100,18 +101,22 @@ export default async function (fastify: FastifyInstance) {
               let drawY: number = 0
 
               if (pageRotation === 90) {
+                request.log.debug('rotation 90deg')
                 drawX = coordsFromBottomLeft.x * Math.cos(rotationRads) - coordsFromBottomLeft.y * Math.sin(rotationRads) + width
                 drawY = coordsFromBottomLeft.x * Math.sin(rotationRads) + coordsFromBottomLeft.y * Math.cos(rotationRads)
               }
               else if (pageRotation === 180) {
+                request.log.debug('rotation 180deg')
                 drawX = coordsFromBottomLeft.x * Math.cos(rotationRads) - coordsFromBottomLeft.y * Math.sin(rotationRads) + width
                 drawY = coordsFromBottomLeft.x * Math.sin(rotationRads) + coordsFromBottomLeft.y * Math.cos(rotationRads) + height
               }
               else if (pageRotation === 270) {
+                request.log.debug('rotation 270deg')
                 drawX = coordsFromBottomLeft.x * Math.cos(rotationRads) - coordsFromBottomLeft.y * Math.sin(rotationRads)
                 drawY = coordsFromBottomLeft.x * Math.sin(rotationRads) + coordsFromBottomLeft.y * Math.cos(rotationRads) + height
               }
               else {
+                request.log.debug('no rotation')
                 // no rotation
                 drawX = coordsFromBottomLeft.x
                 drawY = coordsFromBottomLeft.y
@@ -123,6 +128,14 @@ export default async function (fastify: FastifyInstance) {
                 size: fontSize,
                 rotate: firstPage.getRotation()
               })
+
+              request.log.debug({
+                text: `${document.itemNum} ${document.itemName ?? document.name}`,
+                x: drawX,
+                y: drawY,
+                size: fontSize,
+                rotate: firstPage.getRotation()
+              }, 'adding text to pdf')
 
               pdfDoc.setProducer('PCM oe API v4')
               const pdfBytes = await pdfDoc.save({ addDefaultPage: true })
