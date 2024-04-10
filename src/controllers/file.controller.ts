@@ -70,78 +70,82 @@ export default async function (fastify: FastifyInstance) {
             let should_modify_pdf = Tools.shouldModifyPDF(document)
             reply.header('should_modify_pdf', `${should_modify_pdf}`)
             if (should_modify_pdf) {
-              request.log.debug('should_modify_pdf, using PDFDocument to add text to pdf')
               const pdfDoc = await PDFDocument.load(fs.readFileSync(_fn), { ignoreEncryption: true, updateMetadata: true })
+              if (!pdfDoc.isEncrypted) {
+                request.log.debug('should_modify_pdf, using PDFDocument to add text to pdf')
 
-              const pages = pdfDoc.getPages()
-              const firstPage = pages[0]
-              const { height, width } = firstPage.getSize()
+                const pages = pdfDoc.getPages()
+                const firstPage = pages[0]
+                const { height, width } = firstPage.getSize()
 
-              const pageRotation = firstPage.getRotation().angle
-              request.log.debug({ pageRotation, height, width, pageCount: pages.length }, 'page info')
-              const rotationRads = pageRotation * Math.PI / 180
+                const pageRotation = firstPage.getRotation().angle
+                request.log.debug({ pageRotation, height, width, pageCount: pages.length }, 'page info')
+                const rotationRads = pageRotation * Math.PI / 180
 
-              const x = 10
-              const y = 10
-              const fontSize = 10
+                const x = 10
+                const y = 10
+                const fontSize = 10
 
-              //These coords are now from bottom/left
-              let coordsFromBottomLeft = {
-                x: x,
-                y: 0
+                //These coords are now from bottom/left
+                let coordsFromBottomLeft = {
+                  x: x,
+                  y: 0
+                }
+                if (pageRotation === 90 || pageRotation === 270) {
+                  coordsFromBottomLeft.y = width - (y + fontSize)
+                }
+                else {
+                  coordsFromBottomLeft.y = height - (y + fontSize)
+                }
+
+                let drawX: number = 0
+                let drawY: number = 0
+
+                if (pageRotation === 90) {
+                  request.log.debug('rotation 90deg')
+                  drawX = coordsFromBottomLeft.x * Math.cos(rotationRads) - coordsFromBottomLeft.y * Math.sin(rotationRads) + width
+                  drawY = coordsFromBottomLeft.x * Math.sin(rotationRads) + coordsFromBottomLeft.y * Math.cos(rotationRads)
+                }
+                else if (pageRotation === 180) {
+                  request.log.debug('rotation 180deg')
+                  drawX = coordsFromBottomLeft.x * Math.cos(rotationRads) - coordsFromBottomLeft.y * Math.sin(rotationRads) + width
+                  drawY = coordsFromBottomLeft.x * Math.sin(rotationRads) + coordsFromBottomLeft.y * Math.cos(rotationRads) + height
+                }
+                else if (pageRotation === 270) {
+                  request.log.debug('rotation 270deg')
+                  drawX = coordsFromBottomLeft.x * Math.cos(rotationRads) - coordsFromBottomLeft.y * Math.sin(rotationRads)
+                  drawY = coordsFromBottomLeft.x * Math.sin(rotationRads) + coordsFromBottomLeft.y * Math.cos(rotationRads) + height
+                }
+                else {
+                  request.log.debug('no rotation')
+                  // no rotation
+                  drawX = coordsFromBottomLeft.x
+                  drawY = coordsFromBottomLeft.y
+                }
+
+                firstPage.drawText(`${document.itemNum} ${document.itemName ?? document.name}`, {
+                  x: drawX,
+                  y: drawY,
+                  size: fontSize,
+                  rotate: firstPage.getRotation()
+                })
+
+                request.log.debug({
+                  text: `${document.itemNum} ${document.itemName ?? document.name}`,
+                  x: drawX,
+                  y: drawY,
+                  size: fontSize,
+                  rotate: firstPage.getRotation()
+                }, 'adding text to pdf')
+
+                pdfDoc.setProducer('PCM oe API v4')
+                const pdfBytes = await pdfDoc.save({ addDefaultPage: true })
+                success = true
+                return reply
+                  .send(Buffer.from(pdfBytes))
+              } else {
+                request.log.debug('This file is encrypted and cannot be modified!')
               }
-              if (pageRotation === 90 || pageRotation === 270) {
-                coordsFromBottomLeft.y = width - (y + fontSize)
-              }
-              else {
-                coordsFromBottomLeft.y = height - (y + fontSize)
-              }
-
-              let drawX: number = 0
-              let drawY: number = 0
-
-              if (pageRotation === 90) {
-                request.log.debug('rotation 90deg')
-                drawX = coordsFromBottomLeft.x * Math.cos(rotationRads) - coordsFromBottomLeft.y * Math.sin(rotationRads) + width
-                drawY = coordsFromBottomLeft.x * Math.sin(rotationRads) + coordsFromBottomLeft.y * Math.cos(rotationRads)
-              }
-              else if (pageRotation === 180) {
-                request.log.debug('rotation 180deg')
-                drawX = coordsFromBottomLeft.x * Math.cos(rotationRads) - coordsFromBottomLeft.y * Math.sin(rotationRads) + width
-                drawY = coordsFromBottomLeft.x * Math.sin(rotationRads) + coordsFromBottomLeft.y * Math.cos(rotationRads) + height
-              }
-              else if (pageRotation === 270) {
-                request.log.debug('rotation 270deg')
-                drawX = coordsFromBottomLeft.x * Math.cos(rotationRads) - coordsFromBottomLeft.y * Math.sin(rotationRads)
-                drawY = coordsFromBottomLeft.x * Math.sin(rotationRads) + coordsFromBottomLeft.y * Math.cos(rotationRads) + height
-              }
-              else {
-                request.log.debug('no rotation')
-                // no rotation
-                drawX = coordsFromBottomLeft.x
-                drawY = coordsFromBottomLeft.y
-              }
-
-              firstPage.drawText(`${document.itemNum} ${document.itemName ?? document.name}`, {
-                x: drawX,
-                y: drawY,
-                size: fontSize,
-                rotate: firstPage.getRotation()
-              })
-
-              request.log.debug({
-                text: `${document.itemNum} ${document.itemName ?? document.name}`,
-                x: drawX,
-                y: drawY,
-                size: fontSize,
-                rotate: firstPage.getRotation()
-              }, 'adding text to pdf')
-
-              pdfDoc.setProducer('PCM oe API v4')
-              const pdfBytes = await pdfDoc.save({ addDefaultPage: true })
-              success = true
-              return reply
-                .send(Buffer.from(pdfBytes))
             }
           } catch (err) {
             request.log.error(err, 'error while modifying PDF')
