@@ -8,7 +8,7 @@
     "test": "tap --reporter=list --show-full-coverage"
   },
   "dependencies": {
-    "@groupclaes/fastify-elastic": "^4.3.0",
+    "@groupclaes/fastify-elastic": "^4.3.1",
     "fastify": "^4.27.0",
     "mssql": "^10.0.2",
     "pdf-lib": "^1.17.1"
