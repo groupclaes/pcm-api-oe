@@ -265,9 +265,11 @@ export default async function (fastify: FastifyInstance) {
         const _fn = `${env['DATA_PATH']}/content/${_guid.substring(0, 2)}/${_guid}/file`
 
         if (fs.existsSync(_fn)) {
-          if (thumbnail && documentType === 'foto') {
-            return reply.redirect(307, `https://pcm.groupclaes.be/v4/product-images/${_guid}?s=thumb`)
-          }
+          if (thumbnail && documentType === 'foto')
+            return reply.redirect(307, `https://pcm.groupclaes.be/${env.APP_VERSION}/i/${_guid}?s=thumb`)
+          if (document.mimeType.startsWith('image/'))
+            return reply.redirect(307, `https://pcm.groupclaes.be/${env.APP_VERSION}/i/${_guid}`)
+
           const lastMod = fs.statSync(_fn).mtime
 
           const document_name_encoded = encodeURI(document.name)

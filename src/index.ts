@@ -6,7 +6,7 @@ import fileController from './controllers/file.controller'
 import documentlistController from './controllers/documentlist.controller'
 import objectlistController from './controllers/objectlist.controller'
 
-const LOGLEVEL = 'debug'
+const LOGLEVEL = 'warn'
 
 /** Main loop */
 export default async function (config: any): Promise<FastifyInstance | undefined> {

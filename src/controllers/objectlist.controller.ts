@@ -69,6 +69,7 @@ export default async function (fastify: FastifyInstance) {
             downloadUrl: resolveDownloadUrl(e, company, object_type, object_id)
           })), 200, performance.now() - start)
       }
+      request.log.warn('Session has expired!')
       return reply.error('Session has expired!', 401, performance.now() - start)
     } catch (err) {
       request.log.error({ err }, 'failed to get object list!')
