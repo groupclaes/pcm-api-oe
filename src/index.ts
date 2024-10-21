@@ -13,8 +13,7 @@ const LOGLEVEL = 'debug'
 
 /** Main loop */
 export default async function (config: any): Promise<FastifyInstance | undefined> {
-  if (!config.wrapper.mssql && config.mssql) config.wrapper.mssql = config.mssql
-  if (!config.wrapper.fastify.requestLogging) config.wrapper.fastify.requestLogging = true
+  if (!config.wrapper.fastify.requestLogging && LOGLEVEL === 'debug') config.wrapper.fastify.requestLogging = true
 
   const fastify = await Fastify({ ...config.wrapper, securityHeaders: { csp: `default-src 'self' 'unsafe-inline' pcm.groupclaes.be` } })
   fastify.log.level = LOGLEVEL
