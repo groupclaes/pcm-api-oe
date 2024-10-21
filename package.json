@@ -11,7 +11,8 @@
     "@groupclaes/fastify-elastic": "^4.3.1",
     "fastify": "^4.27.0",
     "mssql": "^10.0.2",
-    "pdf-lib": "^1.17.1"
+    "pdf-lib": "^1.17.1",
+    "symbology": "^4.0.1"
   },
   "devDependencies": {
     "@types/mssql": "^9.1.5",

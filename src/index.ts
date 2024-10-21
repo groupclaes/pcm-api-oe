@@ -15,6 +15,7 @@ export default async function (config: any): Promise<FastifyInstance | undefined
   const fastify = await Fastify({ ...config.wrapper, securityHeaders: { csp: `default-src 'self' 'unsafe-inline' pcm.groupclaes.be` } })
   const version_prefix = (env.APP_VERSION ? '/' + env.APP_VERSION : '')
   await fastify.register(fileController, { prefix: `${version_prefix}/${config.wrapper.serviceName}/file`, logLevel: LOGLEVEL })
+  await fastify.register(toolsController, { prefix: `${version_prefix}/${config.wrapper.serviceName}/tools`, logLevel: LOGLEVEL })
   await fastify.register(documentlistController, { prefix: `${version_prefix}/${config.wrapper.serviceName}/documentlist`, logLevel: LOGLEVEL })
   await fastify.register(objectlistController, { prefix: `${version_prefix}/${config.wrapper.serviceName}/objectlist`, logLevel: LOGLEVEL })
   await fastify.listen({ port: +(env['PORT'] ?? 80), host: '::' })
