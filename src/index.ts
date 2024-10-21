@@ -3,8 +3,10 @@ import { env } from 'process'
 
 import { FastifyInstance } from 'fastify'
 import fileController from './controllers/file.controller'
+import toolsController from './controllers/tools.controller'
 import documentlistController from './controllers/documentlist.controller'
 import objectlistController from './controllers/objectlist.controller'
+// http://pcm.groupclaes.be/v4/oe/tools/barcode/code128/734242
 
 const LOGLEVEL = 'warn'
 
