@@ -1,7 +1,11 @@
 // External dependencies
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
-import pkg from 'symbology'
-const { SymbologyType, createStream, OutputType, EncodingMode } = pkg
+import {
+  SymbologyType,
+  OutputType,
+  EncodingMode,
+  createStream
+} from 'symbology'
 
 declare module 'fastify' {
   export interface FastifyReply {
