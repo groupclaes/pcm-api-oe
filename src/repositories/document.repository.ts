@@ -1,17 +1,18 @@
 import sql from 'mssql'
-import db from '../db'
 import { FastifyBaseLogger } from 'fastify'
-
-const DB_NAME = 'PCM'
 
 export default class Document {
   schema: string = '[document].'
   _logger: FastifyBaseLogger
+  _pool: sql.ConnectionPool
 
-  constructor(logger: FastifyBaseLogger) { this._logger = logger }
+  constructor(logger: FastifyBaseLogger, pool: sql.ConnectionPool) {
+    this._logger = logger
+    this._pool = pool
+  }
 
   async findOne(filters) {
-    const r = new sql.Request(await db.get(DB_NAME))
+    const r = new sql.Request(this._pool)
     r.input('id', sql.Int, filters.id)
     r.input('guid', sql.UniqueIdentifier, filters.guid)
     r.input('company', sql.Char, filters.company)
@@ -33,7 +34,7 @@ export default class Document {
   }
 
   async getObjectListOE(company: string, object_type: string, object_id: number, user_id?: number): Promise<DBResultSet> {
-    const r = new sql.Request(await db.get(DB_NAME))
+    const r = new sql.Request(this._pool)
     r.input('company', sql.VarChar, company)
     r.input('object_type', sql.VarChar, object_type)
     r.input('object_id', sql.BigInt, object_id)

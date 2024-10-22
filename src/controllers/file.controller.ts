@@ -1,5 +1,6 @@
 // External dependencies
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
+import sql from 'mssql'
 import { env } from 'process'
 import fs from 'fs'
 import { PDFDocument } from 'pdf-lib'
@@ -8,6 +9,9 @@ import Document from '../repositories/document.repository'
 import Tools from '../repositories/tools'
 
 declare module 'fastify' {
+  export interface FastifyInstance {
+    getSqlPool: (name?: string) => Promise<sql.ConnectionPool>
+  }
   export interface FastifyReply {
     success: (data?: any, code?: number, executionTime?: number) => FastifyReply
     fail: (data?: any, code?: number, executionTime?: number) => FastifyReply
@@ -33,11 +37,12 @@ export default async function (fastify: FastifyInstance) {
       contentMode = 'inline'
 
     try {
-      const repository = new Document(request.log)
+      const pool = await fastify.getSqlPool()
+      const repo = new Document(request.log, pool)
       // const token = request.token || { sub: null }
       let uuid: string = request.params['uuid'].toLowerCase()
 
-      let document = await repository.findOne({
+      let document = await repo.findOne({
         guid: uuid
       })
 
@@ -206,7 +211,8 @@ export default async function (fastify: FastifyInstance) {
     }
 
     try {
-      const repository = new Document(request.log)
+      const pool = await fastify.getSqlPool()
+      const repo = new Document(request.log, pool)
       // const token = request.token || { sub: null }
 
       let company: string = request.params['company'].toLowerCase()
@@ -222,7 +228,7 @@ export default async function (fastify: FastifyInstance) {
       let document
       if (!Tools.shouldFindCommon(company, objectType, documentType)) {
         request.log.debug('default search logic')
-        document = await repository.findOne({
+        document = await repo.findOne({
           companyOe: company,
           objectType,
           documentType,
@@ -231,7 +237,7 @@ export default async function (fastify: FastifyInstance) {
         })
       } else {
         request.log.debug('search in common first logic')
-        document = await repository.findOne({
+        document = await repo.findOne({
           company: 'alg',
           companyOe: company,
           objectType,
@@ -240,7 +246,7 @@ export default async function (fastify: FastifyInstance) {
           culture
         })
         if (!document) {
-          document = await repository.findOne({
+          document = await repo.findOne({
             companyOe: company,
             objectType,
             documentType,
@@ -251,7 +257,7 @@ export default async function (fastify: FastifyInstance) {
       }
       if (company === 'bra' && documentType === 'foto' && !document) {
         request.log.debug('bra picture fallback logic')
-        document = await repository.findOne({
+        document = await repo.findOne({
           companyOe: 'gro',
           objectType,
           documentType,
@@ -436,7 +442,8 @@ export default async function (fastify: FastifyInstance) {
     }
   }>, reply: FastifyReply) {
     try {
-      const repository = new Document(request.log)
+      const pool = await fastify.getSqlPool()
+      const repo = new Document(request.log, pool)
 
       let company: string = request.params['company'].toLowerCase()
       let objectType: string = request.params['objectType'].toLowerCase()
@@ -449,7 +456,7 @@ export default async function (fastify: FastifyInstance) {
 
       let document
       if (!Tools.shouldFindCommon(company, objectType, documentType)) {
-        document = await repository.findOne({
+        document = await repo.findOne({
           companyOe: company,
           objectType,
           documentType,
@@ -457,7 +464,7 @@ export default async function (fastify: FastifyInstance) {
           culture
         })
       } else {
-        document = await repository.findOne({
+        document = await repo.findOne({
           company: 'alg',
           objectType,
           documentType,
@@ -465,7 +472,7 @@ export default async function (fastify: FastifyInstance) {
           culture
         })
         if (!document) {
-          document = await repository.findOne({
+          document = await repo.findOne({
             companyOe: company,
             objectType,
             documentType,

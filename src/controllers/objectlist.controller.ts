@@ -1,9 +1,13 @@
 // External dependencies
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
+import sql from 'mssql'
 import { env } from 'process'
 import Document from '../repositories/document.repository'
 
 declare module 'fastify' {
+  export interface FastifyInstance {
+    getSqlPool: (name?: string) => Promise<sql.ConnectionPool>
+  }
   export interface FastifyReply {
     success: (data?: any, code?: number, executionTime?: number) => FastifyReply
     fail: (data?: any, code?: number, executionTime?: number) => FastifyReply
@@ -25,15 +29,16 @@ export default async function (fastify: FastifyInstance) {
   }>, reply: FastifyReply) {
     const start = performance.now()
     try {
-      const repository = new Document(request.log)
+      const pool = await fastify.getSqlPool()
+      const repo = new Document(request.log, pool)
       // const token = request.token || { sub: null }
 
       let company: string = request.params['company'].toLowerCase()
       let object_type: string = request.params['object_type'].toLowerCase()
       let object_id: number = +request.params['object_id']
 
-      const list1 = repository.getObjectListOE(company, object_type, object_id)
-      const list2 = repository.getObjectListOE('alg', object_type, object_id)
+      const list1 = repo.getObjectListOE(company, object_type, object_id)
+      const list2 = repo.getObjectListOE('alg', object_type, object_id)
 
       const responses = await Promise.all([list1, list2])
 
