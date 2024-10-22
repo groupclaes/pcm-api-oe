@@ -6,6 +6,7 @@ import {
   EncodingMode,
   createStream
 } from 'symbology'
+// https://symbology.dev/docs/api.html
 
 declare module 'fastify' {
   export interface FastifyReply {
@@ -20,25 +21,35 @@ export default async function (fastify: FastifyInstance) {
     Params: {
       format: string,
       value: string
+    }, Querystring: {
+      height?: number
     }
   }>, reply: FastifyReply) {
     const start = performance.now()
 
     try {
-      const { data } = await createStream(
+      let height = +(request.query.height ?? 70)
+      let { data } = await createStream(
         {
-          symbology: SymbologyType.CODE128B,
-          encoding: EncodingMode.GS1_MODE
+          symbology: SymbologyType.CODE128,
+          showHumanReadableText: false,
+          height
         },
         request.params.value,
         OutputType.PNG
       )
 
-      reply.header('Cache-Control', 'must-revalidate, max-age=172800, private')
-        .header('Expires', new Date(new Date().getTime() + 172800000).toUTCString())
-        .header('Last-Modified', new Date().toUTCString())
-        .type('image/png')
-        .send(data)
+      if (data) {
+        data = data.replace('data:image/png;base64,', '')
+
+        const b64 = Buffer.from(data, 'base64')
+        return reply.header('Cache-Control', 'must-revalidate, max-age=172800, private')
+          .header('Expires', new Date(new Date().getTime() + 172800000).toUTCString())
+          .header('Last-Modified', new Date().toUTCString())
+          .type('image/png')
+          .send(b64)
+      }
+      return reply.fail({ data: 'no payload' })
     } catch (err) {
       request.log.error({ error: err }, 'error while generating png')
       return reply.error('error while generating png!', 500, performance.now() - start)
