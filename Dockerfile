@@ -27,7 +27,7 @@ RUN esbuild ./index.ts --bundle --platform=node --minify --packages=external --e
 # --- release ---
 FROM --platform=linux/amd64 groupclaes/node
 
-USER ROOT
+USER root
 RUN apk add --no-cache file imagemagick libpng-dev
 
 # set current user to node
