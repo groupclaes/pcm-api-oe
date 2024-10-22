@@ -28,7 +28,7 @@ export default async function (fastify: FastifyInstance) {
 
     try {
       let height = +(request.query.height ?? 70)
-      let { data } = await createStream(
+      let result = await createStream(
         {
           symbology: SymbologyType.CODE128,
           showHumanReadableText: false,
@@ -38,17 +38,17 @@ export default async function (fastify: FastifyInstance) {
         OutputType.PNG
       )
 
-      if (data) {
-        data = data.replace('data:image/png;base64,', '')
+      if (result.data) {
+        result.data = result.data.replace('data:image/png;base64,', '')
 
-        const b64 = Buffer.from(data, 'base64')
+        const b64 = Buffer.from(result.data, 'base64')
         return reply.header('Cache-Control', 'must-revalidate, max-age=172800, private')
           .header('Expires', new Date(new Date().getTime() + 172800000).toUTCString())
           .header('Last-Modified', new Date().toUTCString())
           .type('image/png')
           .send(b64)
       }
-      return reply.fail({ data: 'no payload' })
+      return reply.fail({ data: 'no payload', result })
     } catch (err) {
       request.log.error({ error: err }, 'error while generating png')
       return reply.error('error while generating png!', 500, performance.now() - start)
