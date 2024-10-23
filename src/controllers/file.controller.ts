@@ -275,7 +275,7 @@ export default async function (fastify: FastifyInstance) {
           if (thumbnail && documentType === 'foto')
             return reply.redirect(`https://pcm.groupclaes.be/${env.APP_VERSION}/i/${_guid}?s=thumb`, 307)
           if (document.mimeType.startsWith('image/'))
-            return reply.redirect(`https://pcm.groupclaes.be/${env.APP_VERSION}/i/${_guid}${s ? '?s=' + request.query.s : ''}`, 307)
+            return reply.redirect(`https://pcm.groupclaes.be/${env.APP_VERSION}/i/${_guid}${request.query.s ? '?s=' + request.query.s : ''}`, 307)
 
           const lastMod = fs.statSync(_fn).mtime
 
