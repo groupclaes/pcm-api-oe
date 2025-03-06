@@ -1,10 +1,10 @@
 // External dependencies
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
-import {
-  SymbologyType,
-  OutputType,
-  createStream
-} from 'symbology'
+// import {
+//   SymbologyType,
+//   OutputType,
+//   createStream
+// } from 'symbology'
 // https://symbology.dev/docs/api.html
 
 declare module 'fastify' {
